@@ -12,7 +12,7 @@ from datetime import datetime
 
 class MemeForge:
     def overlay_text_on_image(self, image_path, meme_text):
-        """Overlay meme text (top and bottom) on the image in classic meme style."""
+        """Overlay meme text (top and bottom) on the image in classic meme style: top at top, bottom at bottom."""
         from PIL import Image, ImageDraw, ImageFont
         # Parse meme_text: expect two lines separated by '---'
         if '---' in meme_text:
@@ -25,7 +25,6 @@ class MemeForge:
 
         # Open image
         img = Image.open(image_path).convert('RGB')
-        draw = ImageDraw.Draw(img)
         width, height = img.size
 
         # Try to use Impact or fallback to default
@@ -39,10 +38,10 @@ class MemeForge:
         def get_text_size(text, font):
             text = text.upper()
             try:
-                bbox = draw.textbbox((0, 0), text, font=font)
+                bbox = ImageDraw.Draw(img).textbbox((0, 0), text, font=font)
                 w, h = bbox[2] - bbox[0], bbox[3] - bbox[1]
             except AttributeError:
-                w, h = draw.textsize(text, font=font)
+                w, h = ImageDraw.Draw(img).textsize(text, font=font)
             return w, h
 
         # Dynamically fit font size to image width
@@ -59,25 +58,12 @@ class MemeForge:
                 size -= 2
             return font
 
-        # Arrange both lines at the top, with padding
-        lines = [top_text]
-        if bottom_text:
-            lines.append(bottom_text)
         padding = int(height * 0.03)
-        line_spacing = int(height * 0.01)
         max_text_width = int(width * 0.95)
-        font = fit_font(lines, max_text_width, int(height/11))
-
-        # Optionally, add a semi-transparent rectangle for readability
-        total_text_height = sum(get_text_size(line, font)[1] for line in lines) + (len(lines)-1)*line_spacing + 2*padding
-        rect_height = total_text_height
-        rect = Image.new('RGBA', (width, rect_height), (0,0,0,120))
-        img_rgba = img.convert('RGBA')
-        img_rgba.paste(rect, (0,0), rect)
-        draw = ImageDraw.Draw(img_rgba)
+        font = fit_font([t for t in [top_text, bottom_text] if t], max_text_width, int(height/11))
 
         # Helper to draw outlined text
-        def draw_text(text, y, font, outline=2):
+        def draw_text(draw, text, y, font, outline=2):
             text = text.upper()
             w, h = get_text_size(text, font)
             x = (width - w) / 2
@@ -89,11 +75,19 @@ class MemeForge:
             # Draw main text
             draw.text((x, y), text, font=font, fill='white')
 
-        # Draw both lines at the top
-        y = padding
-        for line in lines:
-            draw_text(line, y, font)
-            y += get_text_size(line, font)[1] + line_spacing
+        img_rgba = img.convert('RGBA')
+        draw = ImageDraw.Draw(img_rgba)
+
+        # Draw top text at the top
+        if top_text:
+            y_top = padding
+            draw_text(draw, top_text, y_top, font)
+
+        # Draw bottom text at the bottom
+        if bottom_text:
+            _, h = get_text_size(bottom_text, font)
+            y_bottom = height - h - padding
+            draw_text(draw, bottom_text, y_bottom, font)
 
         # Save image (overwrite original)
         img_final = img_rgba.convert('RGB')
@@ -120,10 +114,12 @@ class MemeForge:
             "Content-Type": "application/json"
         }
     
-    def generate_meme_text(self, situation_description):
-        """Generate meme text in strict two-line format for workplace humor"""
+    def generate_meme_text(self, situation_description, style="cartoon/animation", mood="funny"):
+        """Generate meme text in strict two-line format for workplace humor, using user-specified style and mood"""
         prompt = f'''
 You are a professional meme creator specializing in workplace humor. Create meme text for this situation: "{situation_description}"
+Style: {style}
+Mood: {mood}
 Format requirements:
 - Return ONLY two lines separated by ---
 - First line: setup/situation (1 line, concise)
@@ -156,9 +152,8 @@ an email
             print(f"Error generating meme text: {e}")
             return None
     
-    def generate_meme_image(self, situation_description, meme_text):
-        """Generate meme image using DALL-E-3"""
-        # Create detailed cartoon/animation style meme prompt
+    def generate_meme_image(self, situation_description, meme_text, style="cartoon/animation", mood="funny"):
+        """Generate meme image using DALL-E-3 with user-specified style and mood only (no hardcoded style/mood)"""
         if '---' in meme_text:
             top_text = meme_text.split('---')[0].strip()
             bottom_text = meme_text.split('---')[1].strip()
@@ -169,10 +164,9 @@ an email
 
         image_prompt = f'''
 You are a professional meme creator specializing in workplace humor.
-Create a static meme image in a cartoon/animation style for this situation: "{situation_description}"
+Create a static meme image in style: "{style}" for this situation: "{situation_description}" and in mood "{mood}".
 Format requirements:
 Return only one image (no text explanation)
-Style: bright, colorful, cartoonish, exaggerated expressions (Simpsons-inspired)
 Include two lines of text on the image, in classic meme format:
 Top text: setup/situation (concise, max 40 characters)
 Bottom text: punchline/funny twist (max 40 characters)
@@ -183,8 +177,16 @@ Facial expressions and body language should enhance the joke
 Meme text context:
 Top text: {top_text}
 Bottom text: {bottom_text}
+Examples:
+Input: "deadline moved up"
+→ Office worker panicking as a clock speeds up
+Top text: When the deadline was tomorrow
+Bottom text: But now it’s in 30 minutes
+Input: "too many meetings"
+→ Bored employee on an endless video call
+Top text: Another meeting that could’ve been
+Bottom text: an email
 '''
-        
         payload = {
             "messages": [
                 {
@@ -193,33 +195,25 @@ Bottom text: {bottom_text}
                 }
             ],
         }
-        
         try:
-            # Generate image using DALL-E-3
             response = requests.post(
                 f"{self.base_url}/openai/deployments/dall-e-3/chat/completions?api-version={self.api_version}",
                 headers=self.headers,
                 json=payload
             ).json()
-            
             if "choices" not in response:
                 print("Error in image generation response:", response)
                 return None
-            
             image_data = response["choices"][0]["message"]["custom_content"]['attachments']
-            
             image_url = ""
             revised_prompt = ""
-            
             for item in image_data:
                 if item['title'] == 'Revised prompt':
                     revised_prompt = item['data']
                 elif item['title'] == 'Image':
                     image_url = item['url']
-            
             print(f"Revised prompt: {revised_prompt}")
             return image_url
-            
         except Exception as e:
             print(f"Error generating meme image: {e}")
             return None
@@ -256,40 +250,38 @@ Bottom text: {bottom_text}
             print(f"Error downloading image: {e}")
             return None
     
-    def create_meme(self, situation_description):
-        """Complete meme creation pipeline with text overlay"""
+    def create_meme(self, situation_description, style="cartoon/animation", mood="funny"):
+        """Complete meme creation pipeline with text overlay and user-specified style/mood"""
         print(f"🎨 Creating meme for: '{situation_description}'")
         print("=" * 50)
-        # Step 1: Generate meme text
         print("📝 Generating meme text...")
-        meme_text = self.generate_meme_text(situation_description)
+        meme_text = self.generate_meme_text(situation_description, style=style, mood=mood)
         if not meme_text:
             print("❌ Failed to generate meme text")
             return None
         print("✅ Meme text generated:")
         print(meme_text)
         print()
-        # Step 2: Generate image
         print("🖼️  Generating meme image...")
-        image_url = self.generate_meme_image(situation_description, meme_text)
+        image_url = self.generate_meme_image(situation_description, meme_text, style=style, mood=mood)
         if not image_url:
             print("❌ Failed to generate meme image")
             return None
         print("✅ Meme image generated")
-        # Step 3: Download image
         print("💾 Downloading meme...")
         filepath = self.download_image(image_url)
         if not filepath:
             print("❌ Failed to download meme")
             return None
-        # Step 4: Overlay text on image
         print("✍️  Adding text to meme image...")
         self.overlay_text_on_image(filepath, meme_text)
         print("✅ Meme creation complete!")
         return {
             "text": meme_text,
             "image_path": filepath,
-            "situation": situation_description
+            "situation": situation_description,
+            "style": style,
+            "mood": mood
         }
 
 
@@ -304,28 +296,31 @@ def main():
     while True:
         print("\nDescribe your work situation for a meme:")
         print("(or type 'quit' to exit)")
-        
+
         situation = input("Situation: ").strip()
-        
         if situation.lower() in ['quit', 'exit', 'q']:
             print("Thanks for using Meme Forge! 👋")
             break
-        
         if not situation:
             print("Please enter a situation description!")
             continue
-        
+
+        style = input("Enter meme style (e.g. cartoon/animation, Simpsons-inspired, realistic): ").strip()
+        if not style:
+            style = "cartoon/animation"
+        mood = input("Enter meme mood (e.g. funny, sarcastic, dramatic): ").strip()
+        if not mood:
+            mood = "funny"
+
         try:
-            result = forge.create_meme(situation)
-            
+            result = forge.create_meme(situation, style=style, mood=mood)
             if result:
                 print(f"\n🎉 Your meme is ready!")
                 print(f"Text: {result['text']}")
                 print(f"Image saved to: {result['image_path']}")
-            
         except Exception as e:
             print(f"Error creating meme: {e}")
-        
+
         print("\n" + "=" * 50)
 
 

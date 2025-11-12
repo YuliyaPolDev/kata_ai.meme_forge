@@ -34,16 +34,13 @@ def generate_batch_memes():
         
         try:
             result = forge.create_meme(situation)
-            
             if result:
                 results.append(result)
                 print(f"✅ Success!")
             else:
                 print(f"❌ Failed")
-                
         except Exception as e:
             print(f"❌ Error: {e}")
-        
         print("-" * 30)
     
     # Save results summary

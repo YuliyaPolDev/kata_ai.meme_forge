@@ -10,7 +10,26 @@ from openai import AzureOpenAI
 from dotenv import load_dotenv
 from datetime import datetime
 
+import re
+
 class MemeForge:
+    @staticmethod
+    def _sanitize_description(desc, maxlen=30):
+        # Remove non-alphanumeric, replace spaces with underscores, truncate
+        desc = desc.lower()
+        desc = re.sub(r'[^a-z0-9\s]', '', desc)
+        desc = re.sub(r'\s+', '_', desc)
+        return desc[:maxlen].rstrip('_')
+
+    @staticmethod
+    def _get_next_seq_num(directory="static/generated"):  # returns int
+        existing = [f for f in os.listdir(directory) if f.startswith("meme_") and f.endswith(".png")]
+        nums = []
+        for fname in existing:
+            m = re.match(r"meme_(\d{3})_", fname)
+            if m:
+                nums.append(int(m.group(1)))
+        return max(nums, default=0) + 1
     def overlay_text_on_image(self, image_path, meme_text):
         """Overlay meme text (top and bottom) on the image in classic meme style: top at top, bottom at bottom."""
         from PIL import Image, ImageDraw, ImageFont
@@ -218,34 +237,27 @@ Bottom text: an email
             print(f"Error generating meme image: {e}")
             return None
     
-    def download_image(self, image_url, filename=None):
-        """Download generated image from DIAL"""
-        
-        if not filename:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"meme_{timestamp}.png"
-        
+    def download_image(self, image_url, situation_description=None, filename=None):
+        """Download generated image from DIAL, with custom filename if provided"""
         try:
+            os.makedirs("static/generated", exist_ok=True)
+            if not filename:
+                # Use sequential numbering and sanitized description
+                seq = self._get_next_seq_num()
+                desc = self._sanitize_description(situation_description or "meme")
+                filename = f"meme_{seq:03d}_{desc}.png"
+            filepath = os.path.join("static/generated", filename)
+
             url = f"{self.base_url}/v1/{image_url}"
-            
-            # Download the file
             response = requests.get(url, headers={"Api-Key": self.api_key})
             response.raise_for_status()
-            
-            # Save to static/generated/ directory
-            os.makedirs("static/generated", exist_ok=True)
-            filepath = os.path.join("static/generated", filename)
-            
             with open(filepath, "wb") as f:
                 f.write(response.content)
-            
             # Clean up from DIAL server
             delete_response = requests.delete(url, headers={"Api-Key": self.api_key})
             delete_response.raise_for_status()
-            
             print(f"Meme saved to: {filepath}")
             return filepath
-            
         except Exception as e:
             print(f"Error downloading image: {e}")
             return None
@@ -269,7 +281,7 @@ Bottom text: an email
             return None
         print("✅ Meme image generated")
         print("💾 Downloading meme...")
-        filepath = self.download_image(image_url)
+        filepath = self.download_image(image_url, situation_description=situation_description)
         if not filepath:
             print("❌ Failed to download meme")
             return None

@@ -17,7 +17,26 @@ python view_memes.py
 - Menu-driven interface
 - View latest meme
 - List all generated memes
-- Shows file sizes and creation dates
+# 🖼️ How to View Generated Memes - Complete Guide
+
+## 📍 Where Memes Are Stored
+All generated memes are saved in:
+```
+static/generated/
+```
+
+## 🎯 Methods to View Generated Memes
+
+### 1. **Built-in Meme Viewer (Recommended)**
+```powershell
+python view_memes.py
+```
+
+**Features:**
+- Menu-driven interface
+- View latest meme
+- List all generated memes
+- Shows file sizes and batch summary
 
 ### 2. **Windows File Explorer**
 - Navigate to: `C:\Users\YuliyaPalamarchuk\kata_ai_2025_meme\kata_ai.meme_forge\static\generated`
@@ -26,7 +45,6 @@ python view_memes.py
 ### 3. **VS Code Image Preview**
 - In VS Code Explorer, navigate to `static/generated/`
 - Click on any `.png` file to preview in VS Code
-- VS Code has built-in image preview support
 
 ### 4. **Command Line (Windows)**
 ```powershell
@@ -54,17 +72,17 @@ img.show()
 ## 📋 Quick Commands Reference
 
 ### Check if memes exist:
-```bash
+```powershell
 dir static\generated
 ```
 
 ### View latest meme info:
-```bash
+```powershell
 dir static\generated\*.png /O:D
 ```
 
 ### Open generated folder in Explorer:
-```bash
+```powershell
 explorer static\generated
 ```
 
@@ -82,25 +100,25 @@ explorer static\generated
 
 ### File format:
 - All memes are saved as `.png` files
-- Filename format: `meme_YYYYMMDD_HHMMSS.png`
+- Filename format: `meme_XXX_description.png` (with sequential numbering)
 - Also includes batch summary: `batch_summary.json`
 
 ## 🎨 Example Workflow
 
 1. **Generate memes**:
-   ```bash
+   ```powershell
    python meme_forge.py
    # or
    python batch_meme_generator.py
    ```
 
 2. **View immediately**:
-   ```bash
+   ```powershell
    python view_memes.py
    ```
 
 3. **Or check manually**:
-   ```bash
+   ```powershell
    explorer static\generated
    ```
 

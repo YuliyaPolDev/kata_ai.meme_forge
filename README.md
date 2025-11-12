@@ -70,6 +70,76 @@ python view_memes.py
 
 ### Test Meme Generation & Viewing
 
+# Meme Forge MVP 🔥
+
+AI-powered workplace meme generator for the workplace, combining GPT-4o text with DALL-E-3 images. Generate, batch, and view memes right from your terminal!
+
+---
+
+## 📝 Project Summary
+
+Meme Forge is a terminal-based Python tool that creates workplace memes using the latest AI models. It generates meme text with GPT-4o and images with DALL-E-3, saving results for easy viewing and sharing.
+
+---
+
+## 🚀 Features
+
+- 🖥️ **Terminal-based interface**: No UI needed, works directly in VS Code or any terminal
+- 🤖 **LLM + DALL-E integration**: GPT-4o for text, DALL-E-3 for images
+- 🏢 **Workplace-focused**: Generates relatable office/work situation memes
+- 📂 **Organized output**: Saves memes to `static/generated/`
+- 📦 **Batch processing**: Generate multiple memes from a list
+- 🖼️ **Image viewing**: Built-in meme viewer utility
+- 🧪 **Test meme generation**: Quickly test meme creation and viewing with `test_meme_generation.py`
+- 🖼️ **Image recognition**: Recognize content in images using GPT-4o with `image recog.py`
+- 🎨 **Direct DALL-E image generation**: Generate images with custom prompts using `image with DIAL.py`
+- ✍️ **Classic meme text overlay**: Automatically overlays generated text on images in classic meme style
+
+---
+
+## ⚙️ Setup
+
+1. **Install dependencies**
+   - Open PowerShell or your terminal in the project folder.
+   - Run:
+     ```powershell
+     python setup.py
+     ```
+
+2. **Configure API Key**
+   - Open the `.env` file in the project root.
+   - Replace `XXX` with your actual DIAL API key:
+     ```env
+     AZURE_OPENAI_API_KEY=your_actual_api_key_here
+     ```
+
+---
+
+## 💡 Usage
+
+### Interactive Meme Generation
+
+Generate memes one at a time:
+```powershell
+python meme_forge.py
+```
+
+### Batch Meme Generation
+
+Generate memes for a set of predefined workplace situations:
+```powershell
+python batch_meme_generator.py
+```
+
+### View Generated Memes
+
+Menu-driven meme viewer:
+```powershell
+python view_memes.py
+```
+
+### Test Meme Generation & Viewing
+
 Quickly test meme creation and open the result:
 ```powershell
 python test_meme_generation.py
@@ -93,7 +163,6 @@ python "image with DIAL.py"
 
 ---
 
-
 ## 📁 File Structure
 
 ```
@@ -113,11 +182,11 @@ python "image with DIAL.py"
 ├── app/                        # (Reserved for future web app, currently empty)
 ├── HOW_TO_VIEW_MEMES.md        # Viewing instructions
 └── __pycache__/                # Python bytecode cache (auto-generated)
+```
 
 > **Note:**
 > - The `uploads/` and `templates/` folders are optional and may be empty.
 > - The `app/` folder is reserved for future expansion (e.g., web interface).
-```
 
 ---
 
@@ -137,6 +206,7 @@ python "image with DIAL.py"
    _Setup and punchline in classic meme style._
 3. **Creates a workplace-themed image** using DALL-E-3.
 4. **Saves the meme** to `static/generated/`.
+5. **Overlays the generated text** on the image in classic meme style.
 
 ---
 
@@ -147,7 +217,6 @@ python "image with DIAL.py"
 
 ---
 
-
 ## 📦 Requirements
 
 - Python 3.8 or higher
@@ -156,7 +225,6 @@ python "image with DIAL.py"
 - All dependencies from `requirements.txt` (install with `pip install -r requirements.txt`)
 
 ---
-
 
 ## 🛠️ Troubleshooting
 

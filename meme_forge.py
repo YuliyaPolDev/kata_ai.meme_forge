@@ -114,46 +114,42 @@ class MemeForge:
         return image_path
     def __init__(self):
         load_dotenv()
-        
         # DIAL API configuration
         self.api_key = os.environ.get("AZURE_OPENAI_API_KEY", "XXX")
         self.base_url = "https://ai-proxy.lab.epam.com"
         self.api_version = "2025-04-01-preview"
-        
         # Initialize Azure OpenAI client for text generation
         self.client = AzureOpenAI(
             api_key=self.api_key,
             api_version=self.api_version,
             azure_endpoint=self.base_url
         )
-        
         # Headers for DALL-E requests
         self.headers = {
             "api-key": self.api_key,
             "Content-Type": "application/json"
         }
+        # Load prompt templates from JSON file
+        self.prompt_templates = self._load_prompt_templates()
+
+    def _load_prompt_templates(self):
+        """Load prompt templates from prompt_templates.json"""
+        template_path = os.path.join(os.path.dirname(__file__), "prompt_templates.json")
+        try:
+            with open(template_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Error loading prompt templates: {e}")
+            # Fallback to hardcoded templates if file missing
+            return {
+                "text_prompt": {"template": "You are a professional meme creator specializing in workplace humor. Create meme text for this situation: '{situation_description}'\nStyle: {style}\nMood: {mood}\nFormat requirements:\n- Return ONLY two lines separated by ---\n- First line: setup/situation (1 line, concise)\n- Second line: punchline/funny twist (1 line, humorous)\n- Use classic meme style and internet culture references\n- Make it relatable for office workers\n- Maximum 40 characters per line\nExamples:\nInput: 'deadline moved up'\nOutput: When the deadline was tomorrow---\nBut now it's in 30 minutes\nInput: 'too many meetings'\nOutput: Another meeting that could've been---\nemail\n"},
+                "image_prompt": {"template": "You are a professional meme creator specializing in workplace humor.\nCreate a static meme image in style: '{style}' for this situation: '{situation_description}' and in mood '{mood}'.\nFormat requirements:\n- Do NOT add any text to the image.\n- Depict a funny office or workplace scenario (e.g. cubicles, coworkers, meetings, coffee, deadlines) that visually represents the situation.\n- Humor should be relatable, clever, and PG-rated.\n- Facial expressions and body language should enhance the joke.\nExamples:\nInput: 'deadline moved up'\n→ Office worker panicking as a clock speeds up\nInput: 'too many meetings'\n→ Bored employee on an endless video call\n"}
+            }
     
     def generate_meme_text(self, situation_description, style="cartoon/animation", mood="funny"):
         """Generate meme text in strict two-line format for workplace humor, using user-specified style and mood"""
-        prompt = f'''
-You are a professional meme creator specializing in workplace humor. Create meme text for this situation: "{situation_description}"
-Style: {style}
-Mood: {mood}
-Format requirements:
-- Return ONLY two lines separated by ---
-- First line: setup/situation (1 line, concise)
-- Second line: punchline/funny twist (1 line, humorous)
-- Use classic meme style and internet culture references
-- Make it relatable for office workers
-- Maximum 40 characters per line
-Examples:
-Input: "deadline moved up"
-Output: When the deadline was tomorrow---
-But now it's in 30 minutes
-Input: "too many meetings"
-Output: Another meeting that could've been---
-an email
-'''
+        prompt_template = self.prompt_templates.get("text_prompt", {}).get("template", "")
+        prompt = prompt_template.format(situation_description=situation_description, style=style, mood=mood)
         try:
             response = self.client.chat.completions.create(
                 model="gpt-4o",
@@ -173,20 +169,8 @@ an email
     
     def generate_meme_image(self, situation_description, meme_text, style="cartoon/animation", mood="funny"):
         """Generate meme image using DALL-E-3 with user-specified style and mood, but instruct DALL-E to generate the scene ONLY, with NO text on the image. Text will be overlaid later."""
-        image_prompt = f'''
-You are a professional meme creator specializing in workplace humor.
-Create a static meme image in style: "{style}" for this situation: "{situation_description}" and in mood "{mood}".
-Format requirements:
-- Do NOT add any text to the image.
-- Depict a funny office or workplace scenario (e.g. cubicles, coworkers, meetings, coffee, deadlines) that visually represents the situation.
-- Humor should be relatable, clever, and PG-rated.
-- Facial expressions and body language should enhance the joke.
-Examples:
-Input: "deadline moved up"
-→ Office worker panicking as a clock speeds up
-Input: "too many meetings"
-→ Bored employee on an endless video call
-'''
+        image_prompt_template = self.prompt_templates.get("image_prompt", {}).get("template", "")
+        image_prompt = image_prompt_template.format(situation_description=situation_description, style=style, mood=mood)
         payload = {
             "messages": [
                 {

@@ -172,39 +172,20 @@ an email
             return None
     
     def generate_meme_image(self, situation_description, meme_text, style="cartoon/animation", mood="funny"):
-        """Generate meme image using DALL-E-3 with user-specified style and mood only (no hardcoded style/mood)"""
-        if '---' in meme_text:
-            top_text = meme_text.split('---')[0].strip()
-            bottom_text = meme_text.split('---')[1].strip()
-        else:
-            lines = meme_text.splitlines()
-            top_text = lines[0] if lines else ''
-            bottom_text = lines[1] if len(lines) > 1 else ''
-
+        """Generate meme image using DALL-E-3 with user-specified style and mood, but instruct DALL-E to generate the scene ONLY, with NO text on the image. Text will be overlaid later."""
         image_prompt = f'''
 You are a professional meme creator specializing in workplace humor.
 Create a static meme image in style: "{style}" for this situation: "{situation_description}" and in mood "{mood}".
 Format requirements:
-Return only one image (no text explanation)
-Include two lines of text on the image, in classic meme format:
-Top text: setup/situation (concise, max 40 characters)
-Bottom text: punchline/funny twist (max 40 characters)
-Use Impact font, bold white text with black outline
-Scene should depict a funny office or workplace scenario (e.g. cubicles, coworkers, meetings, coffee, deadlines)
-Humor should be relatable, clever, and PG-rated
-Facial expressions and body language should enhance the joke
-Meme text context:
-Top text: {top_text}
-Bottom text: {bottom_text}
+- Do NOT add any text to the image.
+- Depict a funny office or workplace scenario (e.g. cubicles, coworkers, meetings, coffee, deadlines) that visually represents the situation.
+- Humor should be relatable, clever, and PG-rated.
+- Facial expressions and body language should enhance the joke.
 Examples:
 Input: "deadline moved up"
 → Office worker panicking as a clock speeds up
-Top text: When the deadline was tomorrow
-Bottom text: But now it’s in 30 minutes
 Input: "too many meetings"
 → Bored employee on an endless video call
-Top text: Another meeting that could’ve been
-Bottom text: an email
 '''
         payload = {
             "messages": [

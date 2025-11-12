@@ -11,6 +11,7 @@ Meme Forge is a terminal-based Python tool that creates workplace memes using th
 
 ---
 
+
 ## 🚀 Features
 
 - 🖥️ **Terminal-based interface**: No UI needed, works directly in VS Code or any terminal
@@ -19,6 +20,9 @@ Meme Forge is a terminal-based Python tool that creates workplace memes using th
 - 📂 **Organized output**: Saves memes to `static/generated/`
 - 📦 **Batch processing**: Generate multiple memes from a list
 - 🖼️ **Image viewing**: Built-in meme viewer utility
+- 🧪 **Test meme generation**: Quickly test meme creation and viewing with `test_meme_generation.py`
+- 🖼️ **Image recognition**: Recognize content in images using GPT-4o with `image recog.py`
+- 🎨 **Direct DALL-E image generation**: Generate images with custom prompts using `image with DIAL.py`
 
 ---
 
@@ -42,6 +46,7 @@ Meme Forge is a terminal-based Python tool that creates workplace memes using th
 
 ## 💡 Usage
 
+
 ### Interactive Meme Generation
 
 Generate memes one at a time:
@@ -63,21 +68,55 @@ Menu-driven meme viewer:
 python view_memes.py
 ```
 
+### Test Meme Generation & Viewing
+
+Quickly test meme creation and open the result:
+```powershell
+python test_meme_generation.py
+```
+
+### Image Recognition (GPT-4o Vision)
+
+Recognize content in an image using GPT-4o:
+```powershell
+python "image recog.py"
+# (edit the script to specify your image file)
+```
+
+### Generate Image with DALL-E-3 Directly
+
+Generate an image with a custom prompt:
+```powershell
+python "image with DIAL.py"
+# (edit the script to specify your prompt)
+```
+
 ---
+
 
 ## 📁 File Structure
 
 ```
-├── meme_forge.py             # Main meme generation engine
-├── batch_meme_generator.py   # Batch meme generator
-├── view_memes.py             # Meme viewer utility
-├── setup.py                  # Setup script
-├── .env                      # API key config
-├── requirements.txt          # Python dependencies
+├── meme_forge.py               # Main meme generation engine
+├── batch_meme_generator.py     # Batch meme generator
+├── view_memes.py               # Meme viewer utility
+├── test_meme_generation.py     # Quick test for meme creation/viewing
+├── image recog.py              # Image recognition with GPT-4o
+├── image with DIAL.py          # Direct DALL-E-3 image generation
+├── setup.py                    # Setup script
+├── .env                        # API key config
+├── requirements.txt            # Python dependencies
 ├── static/
-│   ├── generated/            # Generated memes
-│   └── uploads/              # (Optional) uploads
-└── templates/                # (Optional) templates
+│   ├── generated/              # Generated memes
+│   └── uploads/                # (Optional) uploads
+├── templates/                  # (Optional) templates
+├── app/                        # (Reserved for future web app, currently empty)
+├── HOW_TO_VIEW_MEMES.md        # Viewing instructions
+└── __pycache__/                # Python bytecode cache (auto-generated)
+
+> **Note:**
+> - The `uploads/` and `templates/` folders are optional and may be empty.
+> - The `app/` folder is reserved for future expansion (e.g., web interface).
 ```
 
 ---
@@ -108,22 +147,34 @@ python view_memes.py
 
 ---
 
+
 ## 📦 Requirements
 
-- Python 3.8+
-- DIAL API key
+- Python 3.8 or higher
+- DIAL API key (set in `.env` as `AZURE_OPENAI_API_KEY`)
 - Internet connection
+- All dependencies from `requirements.txt` (install with `pip install -r requirements.txt`)
 
 ---
+
 
 ## 🛠️ Troubleshooting
 
 - **No memes generated?**
-  - Check your API key in `.env`
+  - Check your API key in `.env` (should be `AZURE_OPENAI_API_KEY=your_actual_api_key_here`)
   - Ensure internet connectivity
+  - Make sure your `.env` file is in the project root and not named `.env.txt`
+  - If you see errors about missing dependencies, run: `pip install -r requirements.txt`
 - **Viewer not working?**
   - Install Pillow: `pip install Pillow`
   - Open images manually in your OS or VS Code
+  - On Windows, you can use `start static\generated\meme_filename.png` in PowerShell
+- **Permission or file not found errors?**
+  - Ensure the `static/generated/` directory exists (it will be created automatically if needed)
+  - Check that your antivirus or security software is not blocking file creation
+- **API errors or timeouts?**
+  - Verify your API key is valid and not expired
+  - Try again later in case of temporary network issues
 
 ---
 
